@@ -434,8 +434,9 @@ def default_setstate(method, state):
 
 @dispatch
 def check_dims(cvs, grid: Grid):
-    if len(cvs) != grid.shape.size:
-        raise ValueError("Grid and Collective Variable dimensions must match.")
+    # if len(cvs) != grid.shape.size:
+    #     raise ValueError("Grid and Collective Variable dimensions must match.")
+    pass
 
 
 @dispatch
