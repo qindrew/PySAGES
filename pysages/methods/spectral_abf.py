@@ -117,7 +117,10 @@ class SpectralABF(GriddedSamplingMethod):
     fit_freq: Optional[int] = 100
         Fitting frequency.
 
-    fit_threshold: Optional[int] = 500
+    fit_threshold_early: Optional[int] = 500
+        Number of time steps after which fitting starts to take place.
+
+    fit_threshold_late: Optional[int] = None
         Number of time steps after which fitting starts to take place.
 
     restraints: Optional[CVRestraints] = None
@@ -137,7 +140,8 @@ class SpectralABF(GriddedSamplingMethod):
         super().__init__(cvs, grid, **kwargs)
         self.N = np.asarray(self.kwargs.get("N", 500))
         self.fit_freq = self.kwargs.get("fit_freq", 100)
-        self.fit_threshold = self.kwargs.get("fit_threshold", 500)
+        self.fit_threshold_early = self.kwargs.get("fit_threshold_early", 500)
+        self.fit_threshold_late = self.kwargs.get("fit_threshold_late", None)
         self.grid = self.grid if self.grid.is_periodic else convert(self.grid, Grid[Chebyshev])
         self.model = SpectralGradientFit(self.grid)
         self.use_pinv = self.kwargs.get("use_pinv", False)
@@ -153,7 +157,8 @@ def _spectral_abf(method, snapshot, helpers):
     cv = method.cv
     grid = method.grid
     fit_freq = method.fit_freq
-    fit_threshold = method.fit_threshold
+    fit_threshold_early = method.fit_threshold_early
+    fit_threshold_late = method.fit_threshold_late
 
     dt = snapshot.dt
     dims = grid.shape.size
@@ -180,7 +185,9 @@ def _spectral_abf(method, snapshot, helpers):
     def update(state, data):
         # During the intial stage use ABF
         ncalls = state.ncalls + 1
-        in_fitting_regime = ncalls > fit_threshold
+        in_fitting_regime = ncalls > fit_threshold_early and (
+            fit_threshold_late is None or ncalls <= fit_threshold_late
+        )
         in_fitting_step = in_fitting_regime & (ncalls % fit_freq == 1)
         # Fit forces
         fun = fit_forces(state, in_fitting_step)
