@@ -32,21 +32,22 @@ class Sampler(Calculator):
         initial_snapshot, initialize, mehod_update = method_bundle
 
         atoms = context.atoms
-        atoms_xtb = context.atoms_xtb
         self.implemented_properties = atoms.calc.implemented_properties
         ps = set(self.implemented_properties).intersection(("energy", "forces"))
         err = "Calculator does not support 'energy' or 'forces' calculations"
         assert len(ps) == 2, err
 
         self.atoms = atoms
-        self.atoms_xtb = atoms_xtb
         self.callback = callback
         self.snapshot = initial_snapshot
         self.state = initialize()
         self.update = mehod_update
 
+        calculator2 = context.calc2
+
         sig = signature(atoms.calc.calculate).parameters
         self._calculator = atoms.calc
+        self._calculator2 = context.calc2
         self._context = context
         self._biased_forces = initial_snapshot.forces
         self._default_properties = list(_calculator_defaults(sig, "properties"))
@@ -55,6 +56,8 @@ class Sampler(Calculator):
             if p not in self._default_properties:
                 self._default_properties.append(p)
         self._get_forces = atoms.calc.get_forces
+        self._get_energy_var = atoms.calc.get_energy_var
+        self._get_forces2 = context.calc2
         self._md_step = context.step
 
         # Swap the original step method to add the bias
@@ -75,7 +78,11 @@ class Sampler(Calculator):
         self._calculator.calculate(atoms, properties, system_changes)
 
     def get_forces(self, atoms=None):
-        forces = self._get_forces(atoms)
+        energy_var = self._get_energy_var(atoms)
+        if energy_var > threshold:
+            forces = self._get_forces2(atoms)
+        else:
+            forces = self._get_forces(atoms)
         self.snapshot = take_snapshot(self._context, forces)
         self.state = self.update(self.snapshot, self.state)
         new_forces = self.snapshot.forces
