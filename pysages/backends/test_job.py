@@ -14,16 +14,10 @@ import os
 import dill as pickle
 import importlib
 import numpy as onp
-#from lammps import lammps
 
 import pysages
 import jax
-from coordnum import Coordnum_exp_no_overlap, Coordnum
 from jax import numpy as np
-from fspectralabf import Funnel_Logger
-from fmetad import Funnel_Metadynamics
-from funnel_function import get_funnel_force
-from pysages.methods import CVRestraints, Unbiased
 from functools import partial
 
 from ase import units
