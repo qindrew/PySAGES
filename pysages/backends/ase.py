@@ -32,12 +32,14 @@ class Sampler(Calculator):
         initial_snapshot, initialize, mehod_update = method_bundle
 
         atoms = context.atoms
+        atoms_xtb = context.atoms_xtb
         self.implemented_properties = atoms.calc.implemented_properties
         ps = set(self.implemented_properties).intersection(("energy", "forces"))
         err = "Calculator does not support 'energy' or 'forces' calculations"
         assert len(ps) == 2, err
 
         self.atoms = atoms
+        self.atoms_xtb = atoms_xtb
         self.callback = callback
         self.snapshot = initial_snapshot
         self.state = initialize()
