@@ -79,10 +79,7 @@ class Sampler(Calculator):
 
     def get_forces(self, atoms=None):
         energy_var = self._get_energy_var(atoms)
-        if energy_var > threshold:
-            forces = self._get_forces2(atoms)
-        else:
-            forces = self._get_forces(atoms)
+        forces = np.where(energy_var > threshold, self._get_forces2(atoms), self._get_forces(atoms))
         self.snapshot = take_snapshot(self._context, forces)
         self.state = self.update(self.snapshot, self.state)
         new_forces = self.snapshot.forces
