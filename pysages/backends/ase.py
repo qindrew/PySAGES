@@ -43,8 +43,6 @@ class Sampler(Calculator):
         self.state = initialize()
         self.update = mehod_update
 
-        calculator2 = context.calc2
-
         sig = signature(atoms.calc.calculate).parameters
         self._calculator = atoms.calc
         self._calculator2 = context.calc2
