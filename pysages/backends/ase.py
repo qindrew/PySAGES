@@ -45,7 +45,6 @@ class Sampler(Calculator):
 
         sig = signature(atoms.calc.calculate).parameters
         self._calculator = atoms.calc
-        self._calculator2 = context.calc2
         self._threshold = context.threshold
         self._context = context
         self._biased_forces = initial_snapshot.forces
