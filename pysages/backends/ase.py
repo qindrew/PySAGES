@@ -48,6 +48,7 @@ class Sampler(Calculator):
         sig = signature(atoms.calc.calculate).parameters
         self._calculator = atoms.calc
         self._calculator2 = context.calc2
+        self._threshold = context.threshold
         self._context = context
         self._biased_forces = initial_snapshot.forces
         self._default_properties = list(_calculator_defaults(sig, "properties"))
@@ -79,7 +80,7 @@ class Sampler(Calculator):
 
     def get_forces(self, atoms=None):
         energy_var = self._get_energy_var(atoms)
-        forces = np.where(energy_var > threshold, self._get_forces2(atoms), self._get_forces(atoms))
+        forces = np.where(energy_var > self._threshold, self._get_forces2(atoms), self._get_forces(atoms))
         self.snapshot = take_snapshot(self._context, forces)
         self.state = self.update(self.snapshot, self.state)
         new_forces = self.snapshot.forces
