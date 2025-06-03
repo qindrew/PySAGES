@@ -56,8 +56,8 @@ class Sampler(Calculator):
             if p not in self._default_properties:
                 self._default_properties.append(p)
         self._get_forces = atoms.calc.get_forces
-        self._get_energy_var = atoms.calc.get_energy_var
-        self._get_forces2 = context.calc2
+        self._get_energy_var = lambda x: atoms.calc.get_property("energy_var",x)
+        self._get_forces2 = context.calc2.get_forces
         self._md_step = context.step
 
         # Swap the original step method to add the bias
