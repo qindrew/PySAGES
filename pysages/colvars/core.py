@@ -189,40 +189,45 @@ def _build(cv: CollectiveVariable, differentiate: bool = True):
 
     if _get_nargs(xi) == 1:
 
-        def evaluate(positions: JaxArray, ids: JaxArray, **kwargs):
-            pos = positions[ids[idx]]
-            return np.asarray(xi(pos, **kwargs))
+        def evaluate(positions, ids: JaxArray, **kwargs):
+            return xi(positions, **kwargs)
 
     elif len(gps) == 0:
 
         def evaluate(positions: JaxArray, ids: JaxArray, **kwargs):
             pos = positions[ids[idx]]
-            return np.asarray(xi(*pos, **kwargs))
+            return xi(*pos, **kwargs)
 
     else:
 
         def evaluate(positions: JaxArray, ids: JaxArray, **kwargs):
             pos = positions[ids[idx]]
             pos = [pos[g] for g in gps]
-            return np.asarray(xi(*pos, **kwargs))
+            return xi(*pos, **kwargs)
 
     cv_fn = evaluate
 
     if differentiate:
-        diff_op = _diff_op(cv)
-        cv_grad = diff_op(evaluate)
-
         def apply(pos: JaxArray, ids: JaxArray, **kwargs):
-            xi = cv_fn(pos, ids, **kwargs).reshape(1, -1)
-            Jxi = cv_grad(pos, ids, **kwargs).reshape(xi.shape[-1], -1)
+            positions = torch.tensor(pos[ids[idx]], requires_grad=True).to('cuda')
+            xi = cv_fn(positions, ids, **kwargs)
+            Jxi = torch.autograd.grad(
+                outputs=xi,
+                inputs=positions,
+                create_graph=False,
+                retain_graph=False,
+                only_inputs=True
+            )[0]
+            xi = np.array(xi).reshape(1,-1)
+            Jxi = np.array(Jxi).reshape(xi.shape[-1], -1)
             return xi, Jxi
 
     else:
 
         def apply(pos: JaxArray, ids: JaxArray, **kwargs):
-            return cv_fn(pos, ids, **kwargs).reshape(1, -1)
+            return np.array(cv_fn(pos, ids, **kwargs)).reshape(1, -1)
 
-    return jit(apply)
+    return apply
 
 
 def build(cv: CollectiveVariable, *cvs: CollectiveVariable, differentiate: bool = True):
@@ -271,7 +276,7 @@ def build(cv: CollectiveVariable, *cvs: CollectiveVariable, differentiate: bool 
             ids = data.indices
             return np.hstack([cv(pos, ids) for cv in cvs])
 
-    return jit(apply)
+    return apply
 
 
 def _process_groups(indices: Union[Sequence, Tuple]):
