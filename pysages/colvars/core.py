@@ -206,11 +206,11 @@ def _build(cv: CollectiveVariable, differentiate: bool = True):
             pos = [pos[g] for g in gps]
             return np.asarray(xi(*pos, **kwargs))
 
-    cv_fn = jit(evaluate)
+    cv_fn = evaluate
 
     if differentiate:
         diff_op = _diff_op(cv)
-        cv_grad = jit(diff_op(evaluate))
+        cv_grad = diff_op(evaluate)
 
         def apply(pos: JaxArray, ids: JaxArray, **kwargs):
             xi = cv_fn(pos, ids, **kwargs).reshape(1, -1)
