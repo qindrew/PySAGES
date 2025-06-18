@@ -15,6 +15,7 @@ from jax import numpy as np
 
 from pysages.typing import Callable, JaxArray, Sequence, Tuple, Union
 from pysages.utils import dispatch
+import torch
 
 UInt32 = np.uint32
 Index = Union[numpy.intp, numpy.int_, numpy.intc, int]
