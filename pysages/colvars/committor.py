@@ -85,6 +85,46 @@ class Committor_NN(nn.Module):
 
 
 
+class Committor_CV(CollectiveVariable):
+    def __init__(self, indices, torch_model_path, pbc, atomic_numbers, cell, device='cuda',):
+        super().__init__(indices)
+        
+        CV_model = torch.load(torch_model_path,map_location=device)
+        self.mace_model = CV_model.mace_model.to(device)
+        self.atom_mlp = CV_model.atom_mlp.to(device)
+        self.z_table = CV_model.z_table
+        self.keyspec = CV_model.keyspec
+        self.l_max = CV_model.l_max
+        self.num_invariant_features = CV_model.num_invariant_features
+        self.num_layers = CV_model.num_layers
+        
+        del CV_model
+        
+        for param in self.mace_model.parameters():
+            param.requires_grad = False
+            
+        for param in self.atom_mlp.parameters():
+            param.requires_grad = False
+
+        self.atomic_numbers = atomic_numbers
+        self.pbc = tuple(pbc)           # pbc = tuple(atoms.get_pbc())
+        self.cell = onp.array(cell)     # cell = np.array(atoms.get_cell())
+
+    @property
+    def function(self):
+        return partial(
+            full_function,
+            atomic_numbers=self.atomic_numbers,
+            pbc=self.pbc,
+            cell=self.cell,
+            z_table=self.z_table,
+            mace_model=self.mace_model,
+            num_layers=self.num_layers,
+            num_invariant_features=self.num_invariant_features,
+            l_max=self.l_max,
+            atom_mlp=self.atom_mlp,
+        )
+
 def full_function(positions, atomic_numbers, pbc, cell, z_table, mace_model, num_layers, 
                   num_invariant_features, l_max, atom_mlp):
 
