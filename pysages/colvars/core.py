@@ -210,7 +210,7 @@ def _build(cv: CollectiveVariable, differentiate: bool = True):
 
     if differentiate:
         def apply(pos: JaxArray, ids: JaxArray, **kwargs):
-            positions = torch.tensor(pos[ids[idx]], requires_grad=True).to('cuda')
+            positions = torch.as_tensor(pos[ids[idx]], requires_grad=True).to('cuda')
             xi, positions = cv_fn(positions, ids, **kwargs)
             Jxi = torch.autograd.grad(
                 outputs=xi,
@@ -219,8 +219,8 @@ def _build(cv: CollectiveVariable, differentiate: bool = True):
                 retain_graph=False,
                 only_inputs=True
             )[0]
-            xi = np.array(xi).reshape(1,-1)
-            Jxi = np.array(Jxi).reshape(xi.shape[-1], -1)
+            xi = np.asarray(xi).reshape(1,-1)
+            Jxi = np.asarray(Jxi).reshape(xi.shape[-1], -1)
             return xi, Jxi
 
     else:
