@@ -211,7 +211,7 @@ def _build(cv: CollectiveVariable, differentiate: bool = True):
     if differentiate:
         def apply(pos: JaxArray, ids: JaxArray, **kwargs):
             positions = torch.tensor(pos[ids[idx]], requires_grad=True).to('cuda')
-            xi, input = cv_fn(positions, ids, **kwargs)
+            xi, positions = cv_fn(positions, ids, **kwargs)
             Jxi = torch.autograd.grad(
                 outputs=xi,
                 inputs=positions, #batchdict returned from pytorch model
