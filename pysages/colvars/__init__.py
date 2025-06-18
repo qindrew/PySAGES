@@ -10,6 +10,7 @@ PySAGES tries to support a variety common collective variables, but it is easy t
 PySAGES with your own.
 """
 
+from .committor import Committor_CV
 from .angles import Angle, DihedralAngle
 from .coordinates import Component, Displacement, Distance
 from .shape import (
