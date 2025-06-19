@@ -195,9 +195,11 @@ def _build(cv: CollectiveVariable, differentiate: bool = True):
 
     elif len(gps) == 0:
 
-        def evaluate(positions: JaxArray, ids: JaxArray, **kwargs):
-            pos = positions[ids[idx]]
-            return xi(*pos, **kwargs)
+        def evaluate(positions, ids: JaxArray, **kwargs):
+            return xi(positions, **kwargs)
+ #       def evaluate(positions: JaxArray, ids: JaxArray, **kwargs):
+ #           pos = positions[ids[idx]]
+ #           return xi(*pos, **kwargs)
 
     else:
 
@@ -210,7 +212,7 @@ def _build(cv: CollectiveVariable, differentiate: bool = True):
 
     if differentiate:
         def apply(pos: JaxArray, ids: JaxArray, **kwargs):
-            positions = torch.as_tensor(pos[ids[idx]], requires_grad=True).to('cuda')
+            positions = numpy.array(pos[ids[idx]]) #torch.as_tensor(numpy.asarray(pos[ids[idx]])).to('cuda').requires_grad_()
             xi, positions = cv_fn(positions, ids, **kwargs)
             Jxi = torch.autograd.grad(
                 outputs=xi,
@@ -219,8 +221,8 @@ def _build(cv: CollectiveVariable, differentiate: bool = True):
                 retain_graph=False,
                 only_inputs=True
             )[0]
-            xi = np.asarray(xi).reshape(1,-1)
-            Jxi = np.asarray(Jxi).reshape(xi.shape[-1], -1)
+            xi = np.asarray(xi.detach().cpu().numpy(),dtype=np.float64).reshape(1,-1)
+            Jxi = np.asarray(Jxi.detach().cpu().numpy(),dtype=np.float64).reshape(xi.shape[-1], -1)
             return xi, Jxi
 
     else:
