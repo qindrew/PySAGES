@@ -205,7 +205,7 @@ def _spectral_abf(method, snapshot, helpers):
         #
         return SpectralABFState(xi, bias, hist, Fsum, force, Wp, state.Wp, fun, ncalls)
 
-    return snapshot, initialize, generalize(update, helpers)
+    return snapshot, initialize, generalize(update, helpers, jit_compile=False)
 
 
 def build_free_energy_fitter(_method: SpectralABF, fit):
